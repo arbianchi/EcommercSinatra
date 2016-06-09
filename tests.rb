@@ -1,7 +1,6 @@
 require 'pry'
 require 'minitest/autorun'
 require 'minitest/focus'
-
 require 'minitest/reporters'
 Minitest::Reporters.use! Minitest::Reporters::ProgressReporter.new
 
@@ -61,11 +60,10 @@ class AppTests < Minitest::Test
     assert_equal 5, Purchase.first.quantity
     assert_equal Purchase.first, user.purchases.first
   end
-
+focus
   def test_users_cant_buy_non_items
     user = make_existing_user
     header "Authorization", user.password
-
     assert_raises ActiveRecord::RecordNotFound do
       post "/items/99999/buy", quantity: 5
     end
@@ -88,7 +86,6 @@ class AppTests < Minitest::Test
     item = make_item
     user = make_existing_user
     header "Authorization", user.password
-
     item.listed_by = user
     item.save!
     r = delete "/items/#{item.id}"
@@ -103,7 +100,9 @@ class AppTests < Minitest::Test
       u = User.create! first_name: i, last_name: i, password: "pass#{i}"
       u.purchases.create! item: item, quantity: 4
     end
-
+    User.all.each do |u|
+      header "Authorization", u.password
+    end
     r = get "/items/#{item.id}/purchases"
 
     assert_equal 200, r.status
